@@ -1,1 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>調音器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --gold: #C8A96E;
+      --gold-dark: #8A6930;
+      --bg: #0A0A0A;
+      --bg2: #141414;
+      --bg3: #1E1E1E;
+      --border: #2A2A2A;
+      --text: #EEEEEE;
+      --muted: #666;
+      --green: #4CAF50;
+      --green-dim: #1A3D1A;
+      --orange: #FF9800;
+      --red: #F44336;
+      --red-dim: #3D1515;
+    }
+
+    body {
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 16px 32px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+
+    .header h1 {
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: var(--gold);
+      text-transform: uppercase;
+      font-weight: 400;
+      margin-bottom: 2px;
+    }
+
+    .header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 10px;
+      color: var(--gold);
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+
+    /* Instrument selector */
+    .select-row {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .select-row label {
+      font-size: 10px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    select {
+      width: 100%;
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+
+    /* Volume bar */
+    .vol-wrap {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .vol-wrap label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .vol-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .vol-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.05s, background 0.2s;
+      background: var(--muted);
+    }
+
+    /* Gauge */
+    .gauge-wrap {
+      width: 100%;
+      position: relative;
+      margin: 4px 0;
+    }
+
+    #gauge {
+      width: 100%;
+      display: block;
+    }
+
+    /* Note display */
+    .note-display {
+      text-align: center;
+      margin: 4px 0 8px;
+    }
+
+    .note-big {
+      font-size: 80px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      transition: color 0.3s;
+    }
+
+    .note-info {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      height: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cents-display {
+      font-size: 30px;
+      font-weight: 700;
+      text-align: center;
+      margin: 4px 0 8px;
+      font-variant-numeric: tabular-nums;
+      transition: color 0.3s;
+      color: var(--muted);
+    }
+
+    /* Cents labels */
+    .cents-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--red);
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .cents-labels span {
+      color: var(--green);
+    }
+
+    /* String buttons */
+    .strings-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .strings-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .str-btn {
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 52px;
+      text-align: center;
+    }
+
+    .str-btn.active {
+      border-width: 2px;
+    }
+
+    /* Start button */
+    .start-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #0A0A0A;
+      margin-bottom: 8px;
+    }
+
+    .start-btn.running {
+      background: linear-gradient(135deg, #8B0000, #CC2222);
+      color: #fff;
+    }
+
+    .start-btn:active {
+      transform: scale(0.97);
+    }
+
+    .status {
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      height: 14px;
+    }
+
+    .status.ok {
+      color: var(--green);
+    }
+
+    .status.err {
+      color: var(--red);
+    }
+
+    /* Tune OK flash */
+    @keyframes pulse-green {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.5
+      }
+    }
+
+    .tuned {
+      animation: pulse-green 0.8s infinite;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>Professional</h1>
+    <h2>TUNER</h2>
+  </div>
+  <div class="divider"></div>
+
+  <!-- Instrument -->
+  <div class="select-row">
+    <label>樂器 / Instrument</label>
+    <select id="inst-sel" onchange="onInstrumentChange()">
+      <option value="guitar-std">🎸 吉他 — 標準 (EADGBe)</option>
+      <option value="guitar-dropd">🎸 吉他 — Drop D (DADGBe)</option>
+      <option value="guitar-open-g">🎸 吉他 — Open G (DGDGBd)</option>
+      <option value="uke-std">🌺 烏克麗麗 — 標準 GCEA</option>
+      <option value="uke-lowg">🌺 烏克麗麗 — Low G</option>
+      <option value="uke-d">🌺 烏克麗麗 — D 調 ADF#B</option>
+    </select>
+  </div>
+
+  <!-- Volume -->
+  <div class="vol-wrap">
+    <label>麥克風訊號 <span id="rms-val">0.0000</span></label>
+    <div class="vol-track">
+      <div class="vol-fill" id="vol-fill"></div>
+    </div>
+  </div>
+
+  <!-- Note -->
+  <div class="note-display">
+    <div class="note-big" id="note-lbl">—</div>
+    <div class="note-info" id="info-lbl"></div>
+  </div>
+
+  <!-- Gauge -->
+  <div class="gauge-wrap">
+    <canvas id="gauge"></canvas>
+  </div>
+
+  <!-- Cents labels -->
+  <div class="cents-labels">
+    <div>♭ 偏低</div>
+    <span>✓ 準確</span>
+    <div>偏高 ♯</div>
+  </div>
+
+  <!-- Cents -->
+  <div class="cents-display" id="cents-lbl">0 ¢</div>
+
+  <div class="divider"></div>
+
+  <!-- Strings -->
+  <div class="strings-label">弦 / Strings</div>
+  <div class="strings-row" id="strings-row"></div>
+
+  <!-- Button -->
+  <button class="start-btn" id="start-btn" onclick="toggle()">▶ 開始調音</button>
+  <div class="status" id="status">點擊開始，需要麥克風權限</div>
+
+  <script>
+    const INSTRUMENTS = {
+      'guitar-std': {
+        name: '吉他標準', strings: [
+          { n: '6E', f: 82.41, c: '#FF6B6B' }, { n: '5A', f: 110.00, c: '#FFB347' },
+          { n: '4D', f: 146.83, c: '#FFE066' }, { n: '3G', f: 196.00, c: '#6BCB77' },
+          { n: '2B', f: 246.94, c: '#74B9FF' }, { n: '1E', f: 329.63, c: '#C39BD3' }]
+      },
+      'guitar-dropd': {
+        name: '吉他 Drop D', strings: [
+          { n: '6D', f: 73.42, c: '#FF6B6B' }, { n: '5A', f: 110.00, c: '#FFB347' },
+          { n: '4D', f: 146.83, c: '#FFE066' }, { n: '3G', f: 196.00, c: '#6BCB77' },
+          { n: '2B', f: 246.94, c: '#74B9FF' }, { n: '1E', f: 329.63, c: '#C39BD3' }]
+      },
+      'guitar-open-g': {
+        name: '吉他 Open G', strings: [
+          { n: '6D', f: 73.42, c: '#FF6B6B' }, { n: '5G', f: 98.00, c: '#FFB347' },
+          { n: '4D', f: 146.83, c: '#FFE066' }, { n: '3G', f: 196.00, c: '#6BCB77' },
+          { n: '2B', f: 246.94, c: '#74B9FF' }, { n: '1D', f: 293.66, c: '#C39BD3' }]
+      },
+      'uke-std': {
+        name: '烏克麗麗標準', strings: [
+          { n: '4G', f: 392.00, c: '#FF9F43' }, { n: '3C', f: 261.63, c: '#54A0FF' },
+          { n: '2E', f: 329.63, c: '#A29BFE' }, { n: '1A', f: 440.00, c: '#00CEC9' }]
+      },
+      'uke-lowg': {
+        name: '烏克麗麗 Low G', strings: [
+          { n: '4G', f: 98.00, c: '#FF9F43' }, { n: '3C', f: 261.63, c: '#54A0FF' },
+          { n: '2E', f: 329.63, c: '#A29BFE' }, { n: '1A', f: 440.00, c: '#00CEC9' }]
+      },
+      'uke-d': {
+        name: '烏克麗麗 D調', strings: [
+          { n: '4A', f: 440.00, c: '#FF9F43' }, { n: '3D', f: 293.66, c: '#54A0FF' },
+          { n: '2F#', f: 369.99, c: '#A29BFE' }, { n: '1B', f: 493.88, c: '#00CEC9' }]
+      },
+    };
+
+    let currentInst = INSTRUMENTS['guitar-std'];
+    let running = false;
+    let audioCtx = null, analyser = null, source = null, stream = null;
+    let animId = null;
+
+    let smoothCents = 0;
+    let freqHistory = [];
+    const HIST = 8;
+
+    // ── Instrument change ──────────────────────────────────────
+    function onInstrumentChange() {
+      const key = document.getElementById('inst-sel').value;
+      currentInst = INSTRUMENTS[key];
+      buildStringBtns();
+    }
+
+    function buildStringBtns() {
+      const row = document.getElementById('strings-row');
+      row.innerHTML = '';
+      currentInst.strings.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'str-btn';
+        btn.textContent = s.n;
+        btn.style.color = s.c + '99';
+        btn.style.borderColor = '#2A2A2A';
+        btn.dataset.name = s.n;
+        row.appendChild(btn);
+      });
+    }
+    buildStringBtns();
+
+    function setActiveString(name) {
+      document.querySelectorAll('.str-btn').forEach(btn => {
+        const s = currentInst.strings.find(x => x.n === btn.dataset.name);
+        if (!s) return;
+        if (btn.dataset.name === name) {
+          btn.classList.add('active');
+          btn.style.color = s.c;
+          btn.style.borderColor = s.c;
+          btn.style.background = s.c + '22';
+        } else {
+          btn.classList.remove('active');
+          btn.style.color = s.c + '66';
+          btn.style.borderColor = '#2A2A2A';
+          btn.style.background = '';
+        }
+      });
+    }
+
+    // ── Pitch detection (YIN) ──────────────────────────────────
+    function yinPitch(buf, rate) {
+      const N = buf.length;
+      const minLag = Math.max(Math.floor(rate / 1400), 1);
+      const maxLag = Math.floor(rate / 50);
+
+      const d = new Float32Array(maxLag);
+      for (let tau = 1; tau < maxLag; tau++) {
+        let s = 0;
+        for (let i = 0; i < N - tau; i++) {
+          const diff = buf[i] - buf[i + tau];
+          s += diff * diff;
+        }
+        d[tau] = s;
+      }
+
+      const dp = new Float32Array(maxLag);
+      dp[0] = 1;
+      let run = 0;
+      for (let tau = 1; tau < maxLag; tau++) {
+        run += d[tau];
+        dp[tau] = run > 0 ? d[tau] * tau / run : 0;
+      }
+
+      let tau = -1;
+      for (let t = minLag; t < maxLag - 1; t++) {
+        if (dp[t] < 0.15) {
+          while (t + 1 < maxLag - 1 && dp[t + 1] < dp[t]) t++;
+          tau = t; break;
+        }
+      }
+      if (tau < 0) {
+        let minV = 1e9, minT = minLag;
+        for (let t = minLag; t < maxLag; t++) { if (dp[t] < minV) { minV = dp[t]; minT = t; } }
+        if (minV > 0.40) return 0;
+        tau = minT;
+      }
+
+      if (tau > minLag && tau < maxLag - 1) {
+        const s0 = dp[tau - 1], s1 = dp[tau], s2 = dp[tau + 1];
+        const den = 2 * (2 * s1 - s0 - s2);
+        if (Math.abs(den) > 1e-10) tau += (s0 - s2) / den;
+      }
+
+      const f = tau > 0 ? rate / tau : 0;
+      return (f > 50 && f < 1500) ? f : 0;
+    }
+
+    function freqToNote(freq) {
+      if (freq <= 0) return { note: '—', cents: 0 };
+      const s = 12 * Math.log2(freq / 440);
+      const n = Math.round(s);
+      const cents = (s - n) * 100;
+      const names = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+      const octave = 4 + Math.floor((n + 9) / 12);
+      return { note: names[((n % 12) + 12) % 12] + octave, cents };
+    }
+
+    function closestString(freq) {
+      if (!freq) return null;
+      let best = null, bestC = 1e9;
+      for (const s of currentInst.strings) {
+        const c = Math.abs(1200 * Math.log2(freq / s.f));
+        if (c < bestC) { bestC = c; best = s; }
+      }
+      return best;
+    }
+
+    // ── Gauge drawing ──────────────────────────────────────────
+    const gaugeEl = document.getElementById('gauge');
+    let gaugeW = 0, gaugeH = 0, gCx = 0, gCy = 0, gR = 0;
+
+    function resizeGauge() {
+      const dpr = window.devicePixelRatio || 1;
+      const W = gaugeEl.parentElement.clientWidth;
+      const H = Math.round(W * 0.48);
+      gaugeEl.width = W * dpr;
+      gaugeEl.height = H * dpr;
+      gaugeEl.style.width = W + 'px';
+      gaugeEl.style.height = H + 'px';
+      gaugeW = W; gaugeH = H;
+      gCx = W / 2; gCy = H - 10;
+      gR = Math.min(W / 2 - 18, H - 18);
+    }
+    resizeGauge();
+    window.addEventListener('resize', () => { resizeGauge(); drawGauge(smoothCents, false); });
+
+    function c2rad(cents) {
+      return (270 - Math.max(-50, Math.min(50, cents)) * 1.8) * Math.PI / 180;
+    }
+
+    function drawArcPath(ctx, r, c0, c1, steps = 80) {
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const c = c0 + (c1 - c0) * i / steps;
+        const a = c2rad(c);
+        const x = gCx + r * Math.cos(a);
+        const y = gCy + r * Math.sin(a);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+    }
+
+    function drawGauge(cents, active) {
+      const dpr = window.devicePixelRatio || 1;
+      const ctx = gaugeEl.getContext('2d');
+      ctx.clearRect(0, 0, gaugeEl.width, gaugeEl.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      const R = gR;
+
+      // Track zones
+      const zones = [
+        { c0: -50, c1: -10, col: '#3D1515', w: 22 },
+        { c0: 10, c1: 50, col: '#3D1515', w: 22 },
+        { c0: -10, c1: -5, col: '#3D2200', w: 22 },
+        { c0: 5, c1: 10, col: '#3D2200', w: 22 },
+        { c0: -5, c1: 5, col: '#0D3D0D', w: 22 },
+      ];
+      // Background first
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#1A1A1A'; ctx.lineWidth = 24;
+      drawArcPath(ctx, R, -50, 50); ctx.stroke();
+
+      for (const z of zones) {
+        ctx.strokeStyle = z.col; ctx.lineWidth = z.w;
+        drawArcPath(ctx, R, z.c0, z.c1, Math.max(4, Math.abs(z.c1 - z.c0) * 3));
+        ctx.stroke();
+      }
+
+      // Glow on green zone
+      ctx.strokeStyle = 'rgba(76,175,80,0.25)'; ctx.lineWidth = 32;
+      drawArcPath(ctx, R, -5, 5, 20); ctx.stroke();
+      ctx.strokeStyle = 'rgba(76,175,80,0.5)'; ctx.lineWidth = 4;
+      drawArcPath(ctx, R, -5, 5, 20); ctx.stroke();
+
+      // Ticks
+      for (let c = -50; c <= 50; c += 5) {
+        const a = c2rad(c);
+        const is0 = c === 0;
+        const tl = is0 ? 22 : (c % 10 === 0 ? 14 : 7);
+        const lw = is0 ? 3 : (c % 10 === 0 ? 2 : 1);
+        const col = is0 ? '#FFFFFF' : (c % 10 === 0 ? '#C8A96E' : '#444');
+        const r0 = R - 28;
+        ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineCap = 'butt';
+        ctx.beginPath();
+        ctx.moveTo(gCx + r0 * Math.cos(a), gCy + r0 * Math.sin(a));
+        ctx.lineTo(gCx + (r0 - tl) * Math.cos(a), gCy + (r0 - tl) * Math.sin(a));
+        ctx.stroke();
+        if (c % 10 === 0 && c !== 0) {
+          const lr = r0 - tl - 13;
+          ctx.fillStyle = '#666';
+          ctx.font = `${Math.max(10, R * 0.09)}px "Courier New"`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText((c > 0 ? '+' : '') + c, gCx + lr * Math.cos(a), gCy + lr * Math.sin(a));
+        }
+      }
+
+      // Baseline
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.lineCap = 'butt';
+      ctx.beginPath();
+      ctx.moveTo(gCx - R - 18, gCy); ctx.lineTo(gCx + R + 18, gCy);
+      ctx.stroke();
+
+      // Center jewel
+      const grad = ctx.createRadialGradient(gCx, gCy, 0, gCx, gCy, 9);
+      grad.addColorStop(0, '#E8C97E');
+      grad.addColorStop(1, '#8A6930');
+      ctx.beginPath();
+      ctx.arc(gCx, gCy, 7, 0, Math.PI * 2);
+      ctx.fillStyle = grad; ctx.fill();
+
+      // Needle
+      if (active) {
+        const a = c2rad(cents);
+        const nx = gCx + (R - 34) * Math.cos(a);
+        const ny = gCy + (R - 34) * Math.sin(a);
+
+        let ncol;
+        if (Math.abs(cents) < 5) ncol = '#4CAF50';
+        else if (Math.abs(cents) < 15) ncol = '#FF9800';
+        else ncol = '#F44336';
+
+        // Glow
+        ctx.strokeStyle = ncol + '44'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(gCx, gCy); ctx.lineTo(nx, ny); ctx.stroke();
+        // Needle
+        ctx.strokeStyle = ncol; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(gCx, gCy); ctx.lineTo(nx, ny); ctx.stroke();
+
+        // LED dot
+        ctx.beginPath();
+        ctx.arc(gCx + (R - 10) * Math.cos(c2rad(0)), gCy + (R - 10) * Math.sin(c2rad(0)), 5, 0, Math.PI * 2);
+        ctx.fillStyle = Math.abs(cents) < 5 ? '#4CAF50' : '#1A1A1A';
+        ctx.fill();
+        if (Math.abs(cents) < 5) {
+          ctx.strokeStyle = '#66BB6A'; ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+    drawGauge(0, false);
+
+    // ── Audio ──────────────────────────────────────────────────
+    let lastRms = 0;
+    function audioTick() {
+      if (!analyser) return;
+      const buf = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(buf);
+
+      let rms = 0;
+      for (let i = 0; i < buf.length; i++) rms += buf[i] * buf[i];
+      rms = Math.sqrt(rms / buf.length);
+      lastRms = rms;
+
+      // Volume bar
+      const pct = Math.min(rms * 3000 / 4.4, 100);
+      const fill = document.getElementById('vol-fill');
+      fill.style.width = pct + '%';
+      fill.style.background = rms > 0.01 ? '#4CAF50' : rms > 0.001 ? '#FF9800' : '#444';
+      document.getElementById('rms-val').textContent = rms.toFixed(4);
+
+      // Pitch
+      const freq = yinPitch(buf, audioCtx.sampleRate);
+      if (freq > 0) {
+        freqHistory.push(freq);
+        if (freqHistory.length > HIST) freqHistory.shift();
+        const sorted = [...freqHistory].sort((a, b) => a - b);
+        const stableFreq = sorted[Math.floor(sorted.length / 2)];
+
+        const { note, cents } = freqToNote(stableFreq);
+        smoothCents += (cents - smoothCents) * 0.1;
+
+        document.getElementById('note-lbl').textContent = note;
+        document.getElementById('note-lbl').style.color =
+          Math.abs(smoothCents) < 5 ? '#4CAF50' : Math.abs(smoothCents) < 15 ? '#FF9800' : '#C8A96E';
+
+        document.getElementById('cents-lbl').textContent = (smoothCents >= 0 ? '+' : '') + smoothCents.toFixed(0) + ' ¢';
+        document.getElementById('cents-lbl').style.color =
+          Math.abs(smoothCents) < 5 ? '#4CAF50' : Math.abs(smoothCents) < 15 ? '#FF9800' : '#F44336';
+
+        const cs = closestString(stableFreq);
+        if (cs) {
+          setActiveString(cs.n);
+          document.getElementById('info-lbl').textContent =
+            `${stableFreq.toFixed(1)} Hz  ·  最接近 ${cs.n} (${cs.f} Hz)`;
+          document.getElementById('info-lbl').style.color = cs.c;
+        }
+
+        drawGauge(smoothCents, true);
+
+        if (Math.abs(smoothCents) < 5) {
+          document.getElementById('note-lbl').classList.add('tuned');
+        } else {
+          document.getElementById('note-lbl').classList.remove('tuned');
+        }
+      } else {
+        freqHistory = [];
+        smoothCents += (0 - smoothCents) * 0.05;
+        document.getElementById('note-lbl').textContent = '—';
+        document.getElementById('note-lbl').style.color = '#C8A96E';
+        document.getElementById('note-lbl').classList.remove('tuned');
+        document.getElementById('cents-lbl').textContent = '0 ¢';
+        document.getElementById('cents-lbl').style.color = '#555';
+        document.getElementById('info-lbl').textContent = '';
+        setActiveString(null);
+        drawGauge(smoothCents, false);
+      }
+
+      animId = requestAnimationFrame(audioTick);
+    }
+
+    async function toggle() {
+      if (running) {
+        running = false;
+        if (animId) cancelAnimationFrame(animId);
+        if (source) source.disconnect();
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        audioCtx = analyser = source = stream = null;
+        freqHistory = []; smoothCents = 0;
+
+        document.getElementById('start-btn').textContent = '▶  開始調音';
+        document.getElementById('start-btn').classList.remove('running');
+        document.getElementById('status').textContent = '已停止';
+        document.getElementById('status').className = 'status';
+        document.getElementById('vol-fill').style.width = '0%';
+        document.getElementById('note-lbl').textContent = '—';
+        document.getElementById('note-lbl').style.color = '#C8A96E';
+        document.getElementById('cents-lbl').textContent = '0 ¢';
+        document.getElementById('cents-lbl').style.color = '#555';
+        document.getElementById('info-lbl').textContent = '';
+        document.getElementById('rms-val').textContent = '0.0000';
+        setActiveString(null);
+        drawGauge(0, false);
+      } else {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+          });
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 4096;
+          analyser.smoothingTimeConstant = 0;
+          source = audioCtx.createMediaStreamSource(stream);
+          source.connect(analyser);
+          running = true;
+          audioTick();
+
+          document.getElementById('start-btn').textContent = '■  停止';
+          document.getElementById('start-btn').classList.add('running');
+          document.getElementById('status').textContent = '聆聽中…撥弦試試';
+          document.getElementById('status').className = 'status ok';
+        } catch (e) {
+          document.getElementById('status').textContent = '無法存取麥克風：' + e.message;
+          document.getElementById('status').className = 'status err';
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
